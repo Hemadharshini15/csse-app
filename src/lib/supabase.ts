@@ -29,15 +29,15 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   },
   realtime: {
     params: {
-      eventsPerSecond: 10
+      eventsPerSecond: 2 // Reduce events per second
     },
     heartbeat: {
-      interval: 5000,
-      maxRetries: 10
+      interval: 15000, // Increase heartbeat interval
+      maxRetries: 5 // Reduce max retries
     },
     reconnectAfterMs: (retryCount) => {
-      // Exponential backoff
-      return Math.min(1000 * Math.pow(2, retryCount), 30000);
+      // Exponential backoff with max delay of 60 seconds
+      return Math.min(1000 * Math.pow(2, retryCount), 60000);
     }
   },
   db: {
@@ -76,8 +76,8 @@ const checkRealtimeHealth = async () => {
 // Initialize health check
 checkRealtimeHealth();
 
-// Set up periodic health check
-realtimeHealthCheck = setInterval(checkRealtimeHealth, 30000);
+// Set up periodic health check with longer interval
+realtimeHealthCheck = setInterval(checkRealtimeHealth, 60000); // Check every minute
 
 // Cleanup function
 export const cleanup = () => {
@@ -88,6 +88,7 @@ export const cleanup = () => {
   // Remove all channels
   const channels = supabase.getChannels();
   channels.forEach(channel => {
+    channel.unsubscribe();
     supabase.removeChannel(channel);
   });
 };
